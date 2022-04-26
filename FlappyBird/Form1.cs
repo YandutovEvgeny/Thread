@@ -8,7 +8,11 @@ namespace FlappyBird
     {
         Random random;
         bool gameStart = false;
+        int count = 0;
         int gravity = -3;
+        Thread tube1;
+        Thread tube2;
+        Thread grav;
         public Form1()
         {
             InitializeComponent();
@@ -21,14 +25,18 @@ namespace FlappyBird
                 pictureBox1.Invoke(new Action(() => pictureBox1.Left -= 3));
 
                 if (pictureBox1.Left < -pictureBox1.Width)
+                {
+                    count++;
                     pictureBox1.Invoke(new Action(()
-                        => {
-                                pictureBox1.Left = Width +
-                                random.Next(pictureBox1.Width, pictureBox1.Width + 100);
-
-                                pictureBox1.Top = 
-                                random.Next(Height / 2, Height / 2 + pictureBox1.Height / 2);
-                           }));
+                        =>
+                    {
+                        pictureBox1.Left = Width +
+                        random.Next(pictureBox1.Width, pictureBox1.Width + 100);
+                        label1.Text = "Score: " + count.ToString();
+                        pictureBox1.Top =
+                        random.Next(Height / 2, Height / 2 + pictureBox1.Height / 2);
+                    }));
+                }
                 Thread.Sleep(5);
             }
         }
@@ -62,6 +70,23 @@ namespace FlappyBird
                     new Action(() => pictureBox3.Top = Height / 2));
                     gameStart = false;
                 }
+                else if(pictureBox3.Left + pictureBox3.Width - 5 > pictureBox1.Left //Если наша птичка между трубами
+                    && pictureBox3.Left + 5 < pictureBox1.Left + pictureBox1.Width)
+                {
+                    if (pictureBox3.Top + 5 < pictureBox2.Top + pictureBox2.Height ||
+                        pictureBox3.Top + pictureBox3.Height - 5 > pictureBox1.Top)
+                    {
+                        pictureBox3.Invoke(
+                            new Action(() =>
+                            {
+                                pictureBox3.Top = Height / 2;
+                                pictureBox1.Left = Width;
+                                pictureBox2.Left = Width;
+                            }));
+                        gameStart = false;
+                    }
+                }
+
                 if (gravity < 3) gravity++;
                 pictureBox3.Invoke(
                     new Action(() =>
@@ -75,9 +100,9 @@ namespace FlappyBird
         private void button1_Click(object sender, EventArgs e)
         {
             gameStart = true;
-            Thread tube1 = new Thread(MoveTube1);
-            Thread tube2 = new Thread(MoveTube2);
-            Thread grav = new Thread(Gravity);
+            tube1 = new Thread(MoveTube1);
+            tube2 = new Thread(MoveTube2);
+            grav = new Thread(Gravity);
             tube1.Start();
             tube2.Start();
             grav.Start();
@@ -85,7 +110,14 @@ namespace FlappyBird
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            gravity = -12;
+            gravity = -8;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            gameStart = false;
+            
+            //Thread.Sleep(1000);
         }
     }
 }
